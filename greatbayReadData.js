@@ -4,7 +4,7 @@ var connection = mysql.createConnection({
  host: "localhost",  // Your port; if not 3306
  port: 3306,  // Your username
  user: "root",  // Your password
- password: "Mafewsez69$",
+ password: process.env.myPassword,
  database: "greatbayDB"
 });// connect to the mysql server and sql database
 connection.connect(function(err) {
