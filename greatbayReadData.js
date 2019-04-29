@@ -4,7 +4,7 @@ var connection = mysql.createConnection({
  host: "localhost",  // Your port; if not 3306
  port: 3306,  // Your username
  user: "root",  // Your password
- password: process.env.myPassword,
+ password: "Mafewsez69$",
  database: "greatbayDB"
 });// connect to the mysql server and sql database
 connection.connect(function(err) {
@@ -85,20 +85,49 @@ function bidAuction() {
          choices: function() {
            var choiceArray = [];
            for (var i = 0; i < results.length; i++) {
-             choiceArray.push(results[i].item_name);
+             choiceArray.push(results[i].item);
            }
            return choiceArray;
          },
          message: "What item would you like to place a bid on?"
        },
        {
-         name: "bidprice",
+         name: "bid",
          type: "input",
          message: "How much would you like to bid?"
        }
      ])
      .then(function(answer) {
-      
+      var chosenItem;
+      for (var i = 0; i < results.length; i++){
+        if (results[i].item === answer.choice){
+          chosenItem = results[i];
+        }
+      }
+
+      if (chosenItem.currentprice < parseInt(answer.bid)){
+        connection.query(
+          "UPDATE items SET ? WHERE ?",
+          [
+            {
+              currentprice: answer.bid
+            },
+            {
+              id: chosenItem.id
+            }
+          ],
+          function(error) {
+            if (error) throw err;
+            console.log("Bid placed successfully!");
+            start();
+          }
+        );
+      }
+      else {
+        console.log("Your bid was too low. Try again...");
+        start();
+      }
+
       updateItem(answer);
 
        });// get the information of the chosen item      
@@ -106,6 +135,7 @@ function bidAuction() {
 }
 
 function createItem(answer) {
+  console.log(answer);
   console.log("Inserting a new item...\n");
   var query = connection.query(
     "INSERT INTO items SET ?",
@@ -125,13 +155,14 @@ function createItem(answer) {
   console.log(query.sql);
 }
 
-function updateItem() {
+function updateItem(answer) {
+ 
   console.log("Updating item price...\n");
   var query = connection.query(
     "UPDATE items SET ? WHERE ?",
     [
       {
-        currentprice: answer.bidprice
+        currentprice: answer.bid
       },
       {
         item: answer.choice
@@ -140,7 +171,7 @@ function updateItem() {
     function(err, res) {
       console.log(res.affectedRows + " products updated!\n");
       // Call deleteProduct AFTER the UPDATE completes
-      deleteItem();
+      deleteItem(answer);
     }
   );
 
@@ -148,7 +179,7 @@ function updateItem() {
   console.log(query.sql);
 }
 
-function deleteItem() {
+function deleteItem(answer) {
   console.log("Deleting old price...\n");
   connection.query(
     "DELETE FROM items WHERE ?",
@@ -169,6 +200,6 @@ function readItems() {
     if (err) throw err;
     // Log all results of the SELECT statement
     console.log(res);
-    connection.end();
+    // connection.end();
   });
 }
